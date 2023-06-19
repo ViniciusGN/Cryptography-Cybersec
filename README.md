@@ -16,3 +16,4 @@ AES:
 -> https://xilinx.github.io/Vitis_Libraries/security/2019.2/guide_L1/internals/aes.html
 -> https://crypto.stackexchange.com/questions/2418/how-to-use-rcon-in-key-expansion-of-128-bit-advanced-encryption-standard
 -> https://www.researchgate.net/figure/The-values-of-Rcon-for-different-rounds-in-AES-128_tbl2_357488845
+

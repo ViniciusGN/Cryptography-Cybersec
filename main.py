@@ -57,8 +57,7 @@ def print_list(lista):
             if j==4:
                 j=0
                 print(end='   ')
-            else:
-                j+=1
+            j+=1
             print(element, end=' ')
         print()
 

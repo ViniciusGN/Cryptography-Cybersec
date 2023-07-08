@@ -196,3 +196,4 @@ if __name__ == '__main__':
     print('='*5 + ' Digite o texto em claro: ' + '='*5)
     plain_text = input("Digite a mensagem: \t")
     print(oaep_pad(plain_text, 1024))
+    print("Texto cifrado: ", plain_text)

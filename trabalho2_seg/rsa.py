@@ -243,8 +243,8 @@ if __name__ == '__main__':
     print('='*6 + '  Digite o texto em claro  ' + '='*6)
     plain_text = input("Digite a mensagem: \t")
     plain_text = plain_text.replace(" ", "")
-    process_text = oaep_enteste(plain_text, 32)
+    process_text = oaep_encode(plain_text, 32)
     print("oaep encode: ", process_text)
     print("-"*15)
-    print("oaep decode: ", oaep_deteste(process_text))
+    print("oaep decode: ", oaep_decode(process_text))
 

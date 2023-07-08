@@ -2,7 +2,6 @@ from random import randrange
 import random
 
 def rsa_gerador_primo():
-    print("Flag 1")
     number_e_primo = False
     k = 128 # número de rodadas de teste
 
@@ -60,30 +59,54 @@ def rsa_generatekey(p, q):
             while a != 0: 
                 a, b = b % a, a
             return b
-    def inverso_modular(a, m): # Algoritmo de Euclides estendido
-        for x in range(1, m):
-            if (a * x) % m == 1:
-                return x
-        print('Não ha inverso modular para o bloco.\n')
-        return None
 
     number = p * q
     phi = (p - 1) * (q - 1) # função totiente de Euler
     # A chave pública é um número e e tal que 1 < e < phi e mdc(e, phi) = 1
 
-    for x in range(2, phi): 
-        if mdc(phi, x) == 1 and inverso_modular(x, phi) != None: #  MDC(φ(n), e) = 1
-            l.append(x)
-    for x in l:
-        if x == inverso_modular(x,phi):
-            l.remove(x)
-    # A lista l contém todos os possíveis valores para e (valores co-primos para chave pública)
-    e = random.choice(l)
+    # Ocodigo abaixo foi abandonado, um numero de 1024 bit demorava uma eternidade...
+    #...para processar por conta de um grande valor de RANGE. Usamos a função POW.
+    # def modInverse(a, m): # Calcula o inverso modular de a mod m (inverso multiplicativo)
+    #     for x in range(1, m):
+    #         if ((a % m) * (x % m)) % m == 1:
+    #             return x
+            
+    def get_random_int(min, max):  # captura um número aleatório entre o min e o max
+        return random.randint(min, max)
+            
+    temporario_e = 0  # verifica se o número encontrado obdece os critérios do RSA quanto ao e e d
+    temp = (get_random_int(1,phi))
+    e=0
 
-    d = inverso_modular(e,phi) # calculo da chave privada d*e = 1 mod(φ(n))
-    return print("\nChaves públicas (e=" + str(e) + ", n=" + str(number) + ")" + "\nChaves privadas (d=" + str(d) + ", n=" + str(number) + ")\n")
+    while(e==0):
+        temporario_e = mdc(temp,phi)
+        if temporario_e == 1: 
+            e = temp
+        else: 
+            temp = (get_random_int(1,phi))
 
-def rsa_operations():
+    d = pow(e,-1, phi)  # Calcula o inverso multiplicativo de e mod phi
+
+    public_key = (number, e)
+    private_key = (number, d)
+    
+    print("\nChaves públicas (e=" + str(e) + ", n=" + str(number) + ")" + "\nChaves privadas (d=" + str(d) + ", n=" + str(number) + ")\n")
+    return public_key, private_key
+
+def encripta_mensagem():
+    def criptografia(m, e, n):
+        c = (m**e) % n
+        return c
+
+    plain_text = input("Digite a mensagem: \t")
+    print('='*5 + ' Digite as chaves públicas: ' + '='*5)
+    e = int(input("Chave e:   "))
+    n = int(input("Chave n:   ")) 
+    enc = ''.join(chr(criptografia(ord(x), e, n)) for x in plain_text)
+    print('Texto Cifrado: ', enc, '\n')
+    return enc
+
+if __name__ == '__main__':
     p = rsa_gerador_primo()
     q = rsa_gerador_primo()
     # q = rsa_gerador_primo()
@@ -91,4 +114,7 @@ def rsa_operations():
     print("------------------")
     print(q)
     print("------------------")
-    print(rsa_generatekey(p, q))
+
+    public_key, private_key = rsa_generatekey(p, q)
+    cypher_text = encripta_mensagem()
+    print(cypher_text)

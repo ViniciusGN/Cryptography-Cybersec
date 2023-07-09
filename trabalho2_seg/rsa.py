@@ -4,6 +4,7 @@ import secrets
 import hashlib
 import binascii
 import base64
+import os
 
 ##########################################################################  RSA Core Functions:
 def rsa_gerador_primo():
@@ -142,89 +143,120 @@ def xor(a, b):
 def bits_to_string(b):
     return ''.join(chr(int(''.join(x), 2)) for x in zip(*[iter(b)]*8))
 
-def mgf(data, length):
-    mgf_data = b''
-    counter = 0
+def hash_func(m):
+    hashe = hashlib.sha3_256(m)
+    return hashe.digest()
 
-    while len(mgf_data) < length:
-        if type(data) is str:
-            hash_input = data.encode('utf-8') + counter.to_bytes(4, 'big')
-        else:
-            hash_input = data + counter.to_bytes(4, 'big')
-        hash_output = sha3_256(hash_input)
-        mgf_data += hash_output
-        counter += 1
+# Para relização desta função, foi utilizado o código disponível neste site:
+# https://techoverflow.net/2020/09/27/how-to-perform-bitwise-boolean-operations-on-bytes-in-python3/
+def bitwise_xor_bytes(a, b):
+    result_int = int.from_bytes(a, byteorder="big") ^ int.from_bytes(b, byteorder="big")
+    return result_int.to_bytes(max(len(a), len(b)), byteorder="big")
 
-    return mgf_data[:length]
-
-def generate_random_seed(length):
-    seed = secrets.token_bytes(length)
-    #print("Semente aleatória:", seed.hex())
-    return seed
-
-##########################################################################  OAEP Functions:
-def oaep_encode(message, k):
-    # Etapa 1: Preenchimento do rótulo
-    label = b''
-    message = message.encode("utf-8")
-    padded_message = message + (b'\x00' * (k - len(message) - len(label) - 1))
-    padded_message += b'\x01' + label
-
-    # Etapa 2: Geração do valor aleatório
-    seed = generate_random_seed(32)
-    seed_bits = int.from_bytes(seed, 'big')
-    seed = bin(seed_bits)[2:]  # Remover o prefixo '0b'
-    #print("Semente:", type(seed))
-
-    # Etapa 3: MGF (Mask Generation Function)
-    mask = mgf(seed, k - len(seed))
-    #print("Máscara:", mask.hex())
-
-    # Etapa 4: XOR com o valor aleatório
-    masked_message = bytes([padded_message[i] ^ mask[i] for i in range(len(mask))])
-
-    # Etapa 5: MGF (Mask Generation Function)
-    masked_message_hex = binascii.hexlify(masked_message).decode('utf-8')  # Converter bytes em hexadecimal
-    masked_message_bin = bin(int(masked_message_hex, 16))[2:]  # Converter hexadecimal em binário
-    masked_message_str = bits_to_string(masked_message_bin)  # Converter binário em string
-    #print("Mensagem mascarada:", masked_message_str)
-
-    masked_seed = mgf(masked_message_str, len(seed))
-    #print("Semente mascarada:", masked_seed.hex())
-
-    # Etapa 6: XOR com a semente original
-    encoded_message = bytes([masked_message[i] ^ masked_seed[i] for i in range(len(masked_seed))])
-
-    return encoded_message
-
-def oaep_decode(encoded_message, k):
-    hlen = len(sha3_256(encoded_message))
-    k1 = k - 1 * hlen - 1
-
-    # Etapa 2: Separar as partes do texto codificado (split)
-    masked_message, masked_seed = encoded_message[:k1], encoded_message[k1:]
-
-    # Etapa 3: MGF (Mask Generation Function)
-    seed = mgf(masked_message, len(masked_seed))
-
-    # Etapa 4: XOR com a semente original
-    masked_message = bytes([masked_message[i] ^ seed[i] for i in range(len(seed))])
-
-    # Etapa 5: MGF (Mask Generation Function)
-    masked_message_hex = binascii.hexlify(masked_message).decode('utf-8')
-
-    # Etapa 6: Remover preenchimento
-    padded_message = '1' + masked_message_hex
-    index = padded_message.find('1', 1)
-    if index == -1:
-        raise ValueError("Preenchimento inválido")
-    padded_message = padded_message[index + 1:]
+# padding
+def mgf1(seed, length):
+    hlen = hashlib.sha3_256().digest_size  # Tamanho do hash SHA-1 em bytes
+    if length > 2**32 * hlen:
+        raise ValueError("mascara muito grande")
     
-    # Etapa 7: Obter a mensagem original
-    original_message = bytes.fromhex(padded_message).decode('utf-8')
+    t = b""
+    counter = 0
+    while len(t) < length:
+        counter_bytes = counter.to_bytes(4, 'big')
+        t += hashlib.sha3_256(seed + counter_bytes).digest()
+        counter += 1
+    
+    return t[:length]
 
-    return original_message
+def oaep_encoding(m, n):
 
+    # 1º: IHash = Hash(L)
+    ihash = hash_func(b'')
+
+    # 2º: Generate a padding string PS consisting of k - mLen - 2 * hLen - 2 bytes withe the value 0x00
+    hlen = len(ihash)
+    mlen = len(m)
+    k = n.bit_length() // 8
+    ps = (k - mlen - (2 * hlen) - 2)
+    ps = b'\x00' * ps
+
+    # 3º: Concatenate ihash, PS, the single byte 0x01, and the message M to form a data block DB
+    db = ihash + ps + b'\x01' + m.encode()
+
+    # 4º Generate a random seed of length hLen.
+    seed = os.urandom(hlen)
+
+    # 5º Use the mask generating function to generate a
+    # mask of the appropriate length for the data block: dbMask = MGF(seed, k - hlen - 1)
+    dbmask = mgf1(seed, k - hlen - 1)
+
+    # 6º: Mask the data block with the generated mask: maskedDB = DB xor dbMask
+    #masked_db = bytes([a ^ b for a, b in zip(db, dbmask)])
+    masked_db = bitwise_xor_bytes(db, dbmask)    
+
+    # 7º: Use the mask generating function to generate a mask of length hLen for the seed:
+    # seedMask = MGF(maskedDB, hLen)
+    seed_mask = mgf1(masked_db, hlen)
+
+    # 8º: Mask the seed with the generated mask: maskedSeed = seed xor seedMask
+    #masked_seed = bytes([a ^ b for a, b in zip(seed, seed_mask)])
+    masked_seed = bitwise_xor_bytes(seed, seed_mask) 
+
+    # 9º: The encoded (padded) message is the byte 0x00 concatenated with the maskedSeed and
+    # maskedDB: EM = 0x00||maskedSeed||maskedDB
+    em = b'\x00' + masked_seed + masked_db  
+    '''print("TESTANDOOOOOOOOOOOOOOOOOOOOOO")
+    print('2º',masked_seed)
+    print('3º',masked_db)'''
+
+    return em
+
+#Rase encrypt
+def rsa_encrypt(m, public_key):
+    n, e = public_key
+    return pow(m,e,n)
+
+def rsa_decrypt(c, private_key):
+    n, d = private_key
+    return pow(c,d,n)
+
+def oaep_decoding(c, private_key):
+    #decifrar c para m. Decifrar texto cifrado
+    m = rsa_decrypt(c, private_key)
+    #print('2:', m)
+
+    # 1º - IHash = Hash(L)
+    ihash = hash_func(b'')
+
+    # 2º - To reverse step 9, split the encoded message EM into the byte 0x00, the maskedSeed (with length hLen) and the maskedDB
+    hlen = (len(ihash))
+    k = private_key[0].bit_length() // 8
+    m = m.to_bytes(k, 'big')#Converter de inteiro para bytes
+    #print('em bytes:', m)
+    bytes = m[:1]
+    masked_seed = m[1 : 1+hlen]
+    masked_db = m[1+hlen : ]
+    '''print("TESTANDOOOOOOOOOOOOOOOOOOOOOO")
+    print('1º',bytes)
+    print('2º',masked_seed)
+    print('3º',masked_db)'''
+
+    #3º - Generate the seedMask which was used to mask the seed: seedMask = MGF(maskedDB, hLen)
+    seed_mask = mgf1(masked_db, hlen)
+
+    #4º - To reverse step 8, recover the seed with the seedMask: seed = maskedSeed xor seedMask
+    seed = bitwise_xor_bytes(masked_seed, seed_mask)
+
+    #5º - Generate the dbMask which was used to mask the data block: dbMask = MGF(seed, k - hLen - 1)
+    db_mask = mgf1(seed, k - hlen - 1)
+
+    #6º - To reverse step 6, recover the data block DB: DB = maskedDB xor dbMask
+    db = bitwise_xor_bytes(masked_db, db_mask)
+
+    message = db[hlen:].lstrip(b'\x00\x01')
+    return message.decode('utf-8')
+
+    
 ##########################################################################  RSA Cryptography Functions:
 def encripta_mensagem(self):
     s = input("Digite a mensagem: \t")
@@ -254,9 +286,10 @@ def descriptografia(cypher_char, d, n):
 
 
 ##########################################################################  RSA Main:
-if __name__ == '__main__':
+def rsa_operations():
     p = rsa_gerador_primo()
     q = rsa_gerador_primo()
+    
 
     print('='*31)
     print('='*13 + " RSA " + '='*13)
@@ -270,16 +303,22 @@ if __name__ == '__main__':
     print("Chave privada:", private_key)
     print("-"*15)
 
-    print('='*6 + '  Digite o texto em claro  ' + '='*6)
-    plain_text = input("Digite a mensagem: \t")
-    plain_text = plain_text.replace(" ", "")
-    process_text = oaep_encode(plain_text, 32)
-    print("oaep encode: ", process_text)
-    print("-"*15)
-    print("oaep decode: ", oaep_decode(process_text))
+    plain_text = input("Digite a mensagem:")
+
+    # OAEP RSA encode
+    m = oaep_encoding(plain_text, public_key[0])
+
+    # Encontrar texto cifrado
+    #print('1:', int.from_bytes(m, byteorder='big'))
+    #print('em bytes:', m)
+    c = rsa_encrypt(int.from_bytes(m, byteorder='big'),public_key)
+    print("\nTexto cifrado: ",c)
 
     # RSA_KA_p(RSA_KA_s(H(AES_k(M)))) = H(AES_k(M)) ? 
     mensagem = "reuniao hj, 14h"
     print("Mensagem original:", mensagem)
     messagem_hash = formating_base64(sha3_256(mensagem))
 
+    #Decifrar
+    texto_decifrado = oaep_decoding(c,private_key)
+    print("\n\nTexto decifrado: ",texto_decifrado)

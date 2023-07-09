@@ -129,6 +129,9 @@ def formating_base64(hash):
     base64_hash = base64.b64encode(hash)
     return base64_hash.decode("utf-8")
 
+def clear_screen():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
 def convert_to_bits(n):
     return [int(digit) for digit in bin(n)[2:]]
 
@@ -290,20 +293,24 @@ def rsa_operations():
     p = rsa_gerador_primo()
     q = rsa_gerador_primo()
     
-
+    clear_screen()
     print('='*31)
     print('='*13 + " RSA " + '='*13)
     print('='*31)
     print("\n")
     print('='*5 + ' Tamanho da chave = 1024 bits ' + '='*5)
     public_key, private_key = rsa_generatekey(p, q)
-    print('='*5 + "Chaves geradas " + '='*5)
-    print("Chave publica:", public_key)
-    print("-"*15)
-    print("Chave privada:", private_key)
-    print("-"*15)
+    op = input("Deseja ver as chaves? (s/n)")
+    if op == 's':
+        print('='*5 + "Chaves geradas " + '='*5)
+        print("Chave publica:", public_key)
+        print("-"*15)
+        print("Chave privada:", private_key)
+        print("-"*15)
+    else:
+        pass
 
-    plain_text = input("Digite a mensagem:")
+    plain_text = input("Digite a mensagem: ")
 
     # OAEP RSA encode
     m = oaep_encoding(plain_text, public_key[0])
@@ -311,14 +318,14 @@ def rsa_operations():
     # Encontrar texto cifrado
     #print('1:', int.from_bytes(m, byteorder='big'))
     #print('em bytes:', m)
+    # Ao inserir a mensagem, ja vamos calcular o hash e assinar e mostrar o procedimento junto com a criptografia
+    m_hash = formating_base64(sha3_256(m))
     c = rsa_encrypt(int.from_bytes(m, byteorder='big'),public_key)
-    print("\nTexto cifrado: ",c)
-
-    # RSA_KA_p(RSA_KA_s(H(AES_k(M)))) = H(AES_k(M)) ? 
-    mensagem = "reuniao hj, 14h"
-    print("Mensagem original:", mensagem)
-    messagem_hash = formating_base64(sha3_256(mensagem))
+    print("\nTexto cifrado: ", c)
+    print("Hash da mensagem: ", m_hash)
 
     #Decifrar
     texto_decifrado = oaep_decoding(c,private_key)
     print("\n\nTexto decifrado: ",texto_decifrado)
+
+    # RSA_KA_p(RSA_KA_s(H(AES_k(M)))) = H(AES_k(M)) ?   

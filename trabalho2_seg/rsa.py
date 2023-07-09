@@ -3,6 +3,7 @@ import random
 import secrets
 import hashlib
 import binascii
+import base64
 
 ##########################################################################  RSA Core Functions:
 def rsa_gerador_primo():
@@ -123,6 +124,10 @@ def sha3_256(message1, message2=None):
     sha3_hash.update(combined_value.encode('utf-8'))
     return sha3_hash.digest()
 
+def formating_base64(hash):
+    base64_hash = base64.b64encode(hash)
+    return base64_hash.decode("utf-8")
+
 def convert_to_bits(n):
     return [int(digit) for digit in bin(n)[2:]]
 
@@ -221,6 +226,31 @@ def oaep_decode(encoded_message, k):
     return original_message
 
 ##########################################################################  RSA Cryptography Functions:
+def encripta_mensagem(self):
+    s = input("Digite a mensagem: \t")
+    print('='*5 + ' Digite as chaves públicas: ' + '='*5)
+    e = int(input("Chave e: \t"))
+    n = int(input("Chave n: \t")) 
+    enc = ''.join(chr(criptografia(ord(x), e, n)) for x in s)
+    print('Texto Cifrado: ', enc, '\n')
+    return enc
+        
+        
+def decripta_mensagem(self, s):
+    self.s = s
+    print('='*5 + ' Digite as chaves privadas: ' + '='*5)
+    d = int(input("Chave d: \t"))
+    n = int(input("Chave n: \t")) 
+    dec = ''.join(chr(descriptografia(ord(x), d, n)) for x in s)
+    return print('Texto Simples: ', dec, '\n')
+
+def criptografia(plain_char, e, n):
+    cypher_char = (plain_char**e) % n
+    return cypher_char
+
+def descriptografia(cypher_char, d, n):
+    plain_char = cypher_char**d % n
+    return plain_char
 
 
 ##########################################################################  RSA Main:
@@ -247,4 +277,9 @@ if __name__ == '__main__':
     print("oaep encode: ", process_text)
     print("-"*15)
     print("oaep decode: ", oaep_decode(process_text))
+
+    # RSA_KA_p(RSA_KA_s(H(AES_k(M)))) = H(AES_k(M)) ? 
+    mensagem = "reuniao hj, 14h"
+    print("Mensagem original:", mensagem)
+    messagem_hash = formating_base64(sha3_256(mensagem))
 

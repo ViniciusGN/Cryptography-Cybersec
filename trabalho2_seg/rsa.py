@@ -3,8 +3,8 @@ import random
 import secrets
 import hashlib
 import binascii
-import base64
 import os
+import unicodedata
 
 ##########################################################################  RSA Core Functions:
 def rsa_gerador_primo():
@@ -125,13 +125,6 @@ def sha3_256(message1, message2=None):
     sha3_hash.update(combined_value.encode('utf-8'))
     return sha3_hash.digest()
 
-def formating_base64(hash):
-    base64_hash = base64.b64encode(hash)
-    return base64_hash.decode("utf-8")
-
-def clear_screen():
-    os.system('cls' if os.name == 'nt' else 'clear')
-
 def convert_to_bits(n):
     return [int(digit) for digit in bin(n)[2:]]
 
@@ -214,6 +207,11 @@ def oaep_encoding(m, n):
 
     return em
 
+#Função para remover acentos, por exemplo. Entrada: Como você está? -> Saída: Como voce esta?
+def remover_acentos(texto):
+    return ''.join(c for c in unicodedata.normalize('NFD', texto)
+                   if unicodedata.category(c) != 'Mn')
+
 #Rase encrypt
 def rsa_encrypt(m, public_key):
     n, e = public_key
@@ -257,35 +255,27 @@ def oaep_decoding(c, private_key):
     db = bitwise_xor_bytes(masked_db, db_mask)
 
     message = db[hlen:].lstrip(b'\x00\x01')
+    print(message)
+
+    '''i = hlen
+    gol = len(db)
+    while i < len(db):
+        if db[i] == 0:
+            i += 1
+            continue
+        elif db[i] == 1:
+            i += 1
+            break
+        else:
+            i += 1
+
+    m = db[i:]'''
+    #return m.decode('utf-8')
+    #return m
     return message.decode('utf-8')
 
     
 ##########################################################################  RSA Cryptography Functions:
-def encripta_mensagem(self):
-    s = input("Digite a mensagem: \t")
-    print('='*5 + ' Digite as chaves públicas: ' + '='*5)
-    e = int(input("Chave e: \t"))
-    n = int(input("Chave n: \t")) 
-    enc = ''.join(chr(criptografia(ord(x), e, n)) for x in s)
-    print('Texto Cifrado: ', enc, '\n')
-    return enc
-        
-        
-def decripta_mensagem(self, s):
-    self.s = s
-    print('='*5 + ' Digite as chaves privadas: ' + '='*5)
-    d = int(input("Chave d: \t"))
-    n = int(input("Chave n: \t")) 
-    dec = ''.join(chr(descriptografia(ord(x), d, n)) for x in s)
-    return print('Texto Simples: ', dec, '\n')
-
-def criptografia(plain_char, e, n):
-    cypher_char = (plain_char**e) % n
-    return cypher_char
-
-def descriptografia(cypher_char, d, n):
-    plain_char = cypher_char**d % n
-    return plain_char
 
 
 ##########################################################################  RSA Main:
@@ -293,24 +283,22 @@ def rsa_operations():
     p = rsa_gerador_primo()
     q = rsa_gerador_primo()
     
-    clear_screen()
+
     print('='*31)
     print('='*13 + " RSA " + '='*13)
     print('='*31)
     print("\n")
     print('='*5 + ' Tamanho da chave = 1024 bits ' + '='*5)
     public_key, private_key = rsa_generatekey(p, q)
-    op = input("Deseja ver as chaves? (s/n)")
-    if op == 's':
-        print('='*5 + "Chaves geradas " + '='*5)
-        print("Chave publica:", public_key)
-        print("-"*15)
-        print("Chave privada:", private_key)
-        print("-"*15)
-    else:
-        pass
+    print('='*5 + "Chaves geradas " + '='*5)
+    print("Chave publica:", public_key)
+    print("-"*15)
+    print("Chave privada:", private_key)
+    print("-"*15)
 
-    plain_text = input("Digite a mensagem: ")
+    plain_text = input("Digite a mensagem:")
+
+    plain_text = remover_acentos(plain_text)
 
     # OAEP RSA encode
     m = oaep_encoding(plain_text, public_key[0])
@@ -318,14 +306,9 @@ def rsa_operations():
     # Encontrar texto cifrado
     #print('1:', int.from_bytes(m, byteorder='big'))
     #print('em bytes:', m)
-    # Ao inserir a mensagem, ja vamos calcular o hash e assinar e mostrar o procedimento junto com a criptografia
-    m_hash = formating_base64(sha3_256(m))
     c = rsa_encrypt(int.from_bytes(m, byteorder='big'),public_key)
-    print("\nTexto cifrado: ", c)
-    print("Hash da mensagem: ", m_hash)
+    print("\nTexto cifrado: ",c)
 
     #Decifrar
     texto_decifrado = oaep_decoding(c,private_key)
     print("\n\nTexto decifrado: ",texto_decifrado)
-
-    # RSA_KA_p(RSA_KA_s(H(AES_k(M)))) = H(AES_k(M)) ?   

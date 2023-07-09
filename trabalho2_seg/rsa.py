@@ -1,8 +1,7 @@
 import random
 import random
-import secrets
 import hashlib
-import binascii
+from operations import esperar_por_enter
 import os
 import unicodedata
 
@@ -275,49 +274,54 @@ def oaep_decoding(c, private_key):
     return message.decode('utf-8')
 
 ##########################################################################  RSA Main:
-def rsa_operations(option, aes_m = None, public_key = None):
-    if option == '1':  # segunda opção do menu
-        p = rsa_gerador_primo()
-        q = rsa_gerador_primo()
-        
+def rsa_operations(option, aes_m = None, n = None, e = None, d = None):
+    if option == '1' or '4':  # segunda opção do menu
+        if option == '1':
+            p = rsa_gerador_primo()
+            q = rsa_gerador_primo()
+            
 
-        print('='*31)
-        print('='*13 + " RSA " + '='*13)
-        print('='*31)
-        print("\n")
-        print('='*5 + ' Tamanho da chave = 1024 bits ' + '='*5)
-        public_key, private_key = rsa_generatekey(p, q)
-        print('='*5 + "Chaves geradas " + '='*5)
-        print("Chave publica:", public_key)
-        print("-"*15)
-        print("Chave privada:", private_key)
-        print("-"*15)
+            print('='*31)
+            print('='*13 + " RSA " + '='*13)
+            print('='*31)
+            print("\n")
+            print('='*5 + ' Tamanho da chave = 1024 bits ' + '='*5)
+            public_key, private_key = rsa_generatekey(p, q)
+            print('='*5 + "Chaves geradas " + '='*5)
+            print("Chave publica: ", public_key)
+            print("-"*15)
+            print("Chave privada: ", private_key)
+            print("-"*15)
 
-        plain_text = input("Digite a mensagem:")
+            plain_text = input("Digite a mensagem: ")
 
-        plain_text = remover_acentos(plain_text)
+            plain_text = remover_acentos(plain_text)
 
-        # OAEP RSA encode
-        m = oaep_encoding(plain_text, public_key[0])
+            # OAEP RSA encode
+            m = oaep_encoding(plain_text, public_key[0])
 
-        # Encontrar texto cifrado
-        #print('1:', int.from_bytes(m, byteorder='big'))
-        #print('em bytes:', m)
-        c = rsa_encrypt(int.from_bytes(m, byteorder='big'),public_key)
-        print("\nTexto cifrado: ",c)
+            # Encontrar texto cifrado
+            #print('1:', int.from_bytes(m, byteorder='big'))
+            #print('em bytes:', m)
+            c = rsa_encrypt(int.from_bytes(m, byteorder='big'),public_key)
+            print("\nTexto cifrado: ",c)
 
-        #Decifrar
-        texto_decifrado = oaep_decoding(c,private_key)
-        print("\n\nTexto decifrado: ",texto_decifrado)
+        if option == '4':
+            #Decifrar
+            private_key = (int(n), int(d))
+            c = input("Insira o texto cifrado: ")
+            c = int(c)
+            texto_decifrado = oaep_decoding(c,private_key)
+            print("\n\nTexto decifrado: ", texto_decifrado)
 
     elif option == '2': # opção de autenticação
         p = rsa_gerador_primo()
         q = rsa_gerador_primo()
         public_key, private_key = rsa_generatekey(p, q)
         print('='*5 + "Chaves geradas " + '='*5)
-        print("Chave publica:", public_key)
+        print("Chave publica (n, e):", public_key)
         print("-"*15)
-        print("Chave privada:", private_key)
+        print("Chave privada (n, d):", private_key)
         print("-"*15)
         h_aes_c = sha3_256(aes_m)
         print("Hash do cypher_text da mensagem: ", h_aes_c)
@@ -328,7 +332,7 @@ def rsa_operations(option, aes_m = None, public_key = None):
     elif option == '3': # opção de verificação
         h_aes_c = sha3_256(aes_m)
         print("Hash do cypher_text da mensagem: ", h_aes_c)
-
+        public_key = (e, n)
         texto_decifrado = oaep_decoding(c,public_key)
         print("\n\nTexto decifrado: ",texto_decifrado)
 

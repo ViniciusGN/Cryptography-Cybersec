@@ -13,19 +13,18 @@ def autenticacao(mensagem):
     plaintext = padding_plaintext(plaintext)
     key = lists_definition(key)
     x = aes_encryption(key, plaintext)
+    print(f"\nTexto cifrado: {x}")
 
     rsa_public_key, rsa_private_key, signuture = rsa_operations(2, x)
     # a Assinatura é: x=AES_k(M), signuture=RSA_KA_s(H(AES_k(M))) e seguido das chaves RSA_KA_p e RSA_KA_s
     sign = (x, signuture, rsa_public_key, rsa_private_key)
     return sign
 
-def verificacao(mensagem, rsa_public_key):
-
-    mensagem = input("\nInsira um texto (16 ASCII characters): ")
-    sign = autenticacao(mensagem)
-    hash_aes_m, texto_decifrado = rsa_operations(3, mensagem,rsa_public_key)
+def verificacao(rsa_public_key):
+    rsa_aes_encrypt = input("Insira o texto cifrado AES (hexadecimal): ")
+    hash_aes_m, aes_encrypt = rsa_operations(3, rsa_aes_encrypt, rsa_public_key)
     print(f"\nHash da mensagem: {hash_aes_m}")
-    print(f"Texto decifrado: {texto_decifrado}")
+    print(f"Texto decifrado em AES: {aes_encrypt}")
 
 if __name__ == '__main__':
     while(1):

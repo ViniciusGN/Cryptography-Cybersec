@@ -4,6 +4,29 @@ from aes_decrypt import aes_decryption
 from key_generator import generate_random_key 
 from rsa import rsa_operations
 
+def autenticacao(mensagem):
+    aes_key = generate_random_key(16)
+    print(f"\nChave gerada {aes_key}")
+    mensagem = plaintext_tohex(mensagem)
+    print(f"Convertido em hexadecimal: {mensagem}")
+    plaintext = lists_definition(plaintext)
+    plaintext = padding_plaintext(plaintext)
+    key = lists_definition(key)
+    x = aes_encryption(key, plaintext)
+
+    rsa_public_key, rsa_private_key, signuture = rsa_operations(2, x)
+    # a Assinatura é: x=AES_k(M), signuture=RSA_KA_s(H(AES_k(M))) e seguido das chaves RSA_KA_p e RSA_KA_s
+    sign = (x, signuture, rsa_public_key, rsa_private_key)
+    return sign
+
+def verificacao(mensagem, rsa_public_key):
+
+    mensagem = input("\nInsira um texto (16 ASCII characters): ")
+    sign = autenticacao(mensagem)
+    hash_aes_m, texto_decifrado = rsa_operations(3, mensagem,rsa_public_key)
+    print(f"\nHash da mensagem: {hash_aes_m}")
+    print(f"Texto decifrado: {texto_decifrado}")
+
 if __name__ == '__main__':
     while(1):
         print("\nOpções:\n1 - AES\n2 - RSA\n3 - Sair")
@@ -38,6 +61,6 @@ if __name__ == '__main__':
                 key = lists_definition(key)
                 x = aes_decryption(key, text)
         elif op == '2':
-            rsa_operations()
+            rsa_operations(1)
         elif op == '3':
             break

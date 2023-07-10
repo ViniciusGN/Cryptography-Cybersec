@@ -334,7 +334,7 @@ def rsa_operations(option):
             # a Assinatura é: x=AES_k(M), signuture=RSA_KA_s(H(AES_k(M))) e seguido das chaves RSA_KA_p e RSA_KA_s
             h_aes_c = sha3_256(x)
             print("Hash do cypher_text da mensagem: ", h_aes_c)
-            h_aes_c = bytes_to_string(h_aes_c)
+            # h_aes_c = bytes_to_string(h_aes_c) -> teste deu errado
             signature = rsa_encrypt(int.from_bytes(h_aes_c, byteorder='big'), private_key)
             print("\nRSA_KA_s(H(AES_k(M))) - Assinatura: ", signature)
 
@@ -344,5 +344,5 @@ def rsa_operations(option):
             print("Hash do cypher_text da mensagem: ", h_aes_c)
             #texto_decifrado = oaep_decoding(h_aes_c,public_key)
             texto_decifrado = rsa_decrypt(signature,public_key)
-            texto_decifrado = string_to_bytes(texto_decifrado)
+            # texto_decifrado = string_to_bytes(texto_decifrado) -> teste deu errado
             print("\n\nTexto decifrado: ",texto_decifrado)

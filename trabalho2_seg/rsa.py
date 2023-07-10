@@ -331,5 +331,3 @@ def rsa_operations(option):
             #texto_decifrado = oaep_decoding(h_aes_c,public_key)
             texto_decifrado = rsa_decrypt(signature,public_key)
             print("\n\nTexto decifrado: ",texto_decifrado)
-
-    pass

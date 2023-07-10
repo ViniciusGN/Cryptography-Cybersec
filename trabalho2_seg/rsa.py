@@ -4,6 +4,9 @@ import hashlib
 from operations import esperar_por_enter
 import os
 import unicodedata
+from key_generator import generate_random_key 
+from operations import esperar_por_enter, plaintext_tohex, lists_definition, padding_plaintext
+from aes_encrypt import aes_encryption
 
 ##########################################################################  RSA Core Functions:
 def rsa_gerador_primo():
@@ -254,28 +257,12 @@ def oaep_decoding(c, private_key):
     db = bitwise_xor_bytes(masked_db, db_mask)
 
     message = db[hlen:].lstrip(b'\x00\x01')
-    print(message)
 
-    '''i = hlen
-    gol = len(db)
-    while i < len(db):
-        if db[i] == 0:
-            i += 1
-            continue
-        elif db[i] == 1:
-            i += 1
-            break
-        else:
-            i += 1
-
-    m = db[i:]'''
-    #return m.decode('utf-8')
-    #return m
     return message.decode('utf-8')
 
 ##########################################################################  RSA Main:
-def rsa_operations(option, aes_m = None, n = None, e = None, d = None):
-    if option == '1' or '4':  # segunda opção do menu
+def rsa_operations(option):
+    if option == '1':  # segunda opção do menu
         if option == '1':
             p = rsa_gerador_primo()
             q = rsa_gerador_primo()
@@ -305,35 +292,42 @@ def rsa_operations(option, aes_m = None, n = None, e = None, d = None):
             #print('em bytes:', m)
             c = rsa_encrypt(int.from_bytes(m, byteorder='big'),public_key)
             print("\nTexto cifrado: ",c)
+            esperar_por_enter()
 
-        if option == '4':
-            #Decifrar
-            private_key = (int(n), int(d))
-            c = input("Insira o texto cifrado: ")
-            c = int(c)
+            print("\nDECIFRAR:")
+            esperar_por_enter()
+
+            #Decifra usando a função oaep_decoding
             texto_decifrado = oaep_decoding(c,private_key)
-            print("\n\nTexto decifrado: ", texto_decifrado)
+            print("\nTexto decifrado: ", texto_decifrado)
+            esperar_por_enter()
 
-    elif option == '2': # opção de autenticação
-        p = rsa_gerador_primo()
-        q = rsa_gerador_primo()
-        public_key, private_key = rsa_generatekey(p, q)
-        print('='*5 + "Chaves geradas " + '='*5)
-        print("Chave publica (n, e):", public_key)
-        print("-"*15)
-        print("Chave privada (n, d):", private_key)
-        print("-"*15)
-        h_aes_c = sha3_256(aes_m)
-        print("Hash do cypher_text da mensagem: ", h_aes_c)
-        c = rsa_encrypt(int.from_bytes(h_aes_c, byteorder='big'), private_key)
+            #Gerar assinatura
+            print("\Assinatura:")
+            esperar_por_enter()
 
-        return public_key, private_key, c
+            aes_key = generate_random_key(16)
+            print(f"\nChave gerada {aes_key}")
+            plain_text = plaintext_tohex(plain_text)
+            print(f"Convertido em hexadecimal: {plain_text}")
+            plaintext = lists_definition(plain_text)
+            plaintext = padding_plaintext(plaintext)
+            aes_key = lists_definition(aes_key)
+            x = aes_encryption(aes_key, plaintext)
+            x = [''.join(lista) for lista in x]
+            x = ''.join(x)
 
-    elif option == '3': # opção de verificação
-        h_aes_c = sha3_256(aes_m)
-        print("Hash do cypher_text da mensagem: ", h_aes_c)
-        public_key = (e, n)
-        texto_decifrado = oaep_decoding(c,public_key)
-        print("\n\nTexto decifrado: ",texto_decifrado)
+            
+            # a Assinatura é: x=AES_k(M), signuture=RSA_KA_s(H(AES_k(M))) e seguido das chaves RSA_KA_p e RSA_KA_s
+            h_aes_c = sha3_256(x)
+            print("Hash do cypher_text da mensagem: ", h_aes_c)
+            signature = rsa_encrypt(int.from_bytes(h_aes_c, byteorder='big'), private_key)
+            print("\nRSA_KA_s(H(AES_k(M))) - Assinatura: ", signature)
 
-        return h_aes_c, texto_decifrado
+            #Verificação
+            #x_encrypt = x
+            h_aes_c = sha3_256(x)
+            print("Hash do cypher_text da mensagem: ", h_aes_c)
+            #texto_decifrado = oaep_decoding(h_aes_c,public_key)
+            texto_decifrado = rsa_decrypt(signature,public_key)
+            print("\n\nTexto decifrado: ",texto_decifrado)

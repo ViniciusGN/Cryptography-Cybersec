@@ -332,7 +332,7 @@ def rsa_operations(option):
             # a Assinatura é: x=AES_k(M), signuture=RSA_KA_s(H(AES_k(M))) e seguido das chaves RSA_KA_p e RSA_KA_s
             h_aes_c = sha3_256(x)
             print("Hash do cypher_text da mensagem: ", h_aes_c)
-            h_aes_c = bits_to_string(h_aes_c)
+            h_aes_c = bytes_to_string(h_aes_c)
             signature = rsa_encrypt(int.from_bytes(h_aes_c, byteorder='big'), private_key)
             print("\nRSA_KA_s(H(AES_k(M))) - Assinatura: ", signature)
 

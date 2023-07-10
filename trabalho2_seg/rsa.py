@@ -337,3 +337,4 @@ def rsa_operations(option, aes_m = None, n = None, e = None, d = None):
         print("\n\nTexto decifrado: ",texto_decifrado)
 
         return h_aes_c, texto_decifrado
+    pass

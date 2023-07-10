@@ -168,8 +168,9 @@ def mgf1(seed, length):
 
 def bytes_to_string(bytes_data):
     # Decodifica os bytes em Base64 para uma string
-    string_data = base64.b64decode(bytes_data).decode('utf-8')
-    return string_data
+    bits_data = ''.join(format(byte, '08b') for byte in bytes_data)
+    base64_data = base64.b64encode(bits_data.encode('utf-8')).decode('utf-8')
+    return base64_data
 
 def string_to_bytes(string_data):
     # Codifica a string em Base64 para bytes

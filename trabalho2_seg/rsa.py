@@ -174,7 +174,8 @@ def bytes_to_string(bytes_data):
 
 def string_to_bytes(string_data):
     # Codifica a string em Base64 para bytes
-    bytes_data = base64.b64encode(string_data.encode('utf-8'))
+    bits_data = ''.join(format(ord(char), '08b') for char in string_data)
+    bytes_data = bytes(int(bits_data[i:i+8], 2) for i in range(0, len(bits_data), 8))
     return bytes_data
 
 ##########################################################################  OAEP and Encryption Functions:

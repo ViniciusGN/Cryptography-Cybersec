@@ -2,7 +2,7 @@ import random
 import random
 import hashlib
 from operations import esperar_por_enter
-import os
+import os, base64
 import unicodedata
 from key_generator import generate_random_key 
 from operations import esperar_por_enter, plaintext_tohex, lists_definition, padding_plaintext
@@ -166,6 +166,17 @@ def mgf1(seed, length):
     
     return t[:length]
 
+def bytes_to_string(bytes_data):
+    # Decodifica os bytes em Base64 para uma string
+    string_data = base64.b64decode(bytes_data).decode('utf-8')
+    return string_data
+
+def string_to_bytes(string_data):
+    # Codifica a string em Base64 para bytes
+    bytes_data = base64.b64encode(string_data.encode('utf-8'))
+    return bytes_data
+
+##########################################################################  OAEP and Encryption Functions:
 def oaep_encoding(m, n):
 
     # 1º: IHash = Hash(L)
@@ -321,6 +332,7 @@ def rsa_operations(option):
             # a Assinatura é: x=AES_k(M), signuture=RSA_KA_s(H(AES_k(M))) e seguido das chaves RSA_KA_p e RSA_KA_s
             h_aes_c = sha3_256(x)
             print("Hash do cypher_text da mensagem: ", h_aes_c)
+            h_aes_c = bits_to_string(h_aes_c)
             signature = rsa_encrypt(int.from_bytes(h_aes_c, byteorder='big'), private_key)
             print("\nRSA_KA_s(H(AES_k(M))) - Assinatura: ", signature)
 
@@ -330,4 +342,5 @@ def rsa_operations(option):
             print("Hash do cypher_text da mensagem: ", h_aes_c)
             #texto_decifrado = oaep_decoding(h_aes_c,public_key)
             texto_decifrado = rsa_decrypt(signature,public_key)
+            texto_decifrado = string_to_bytes(texto_decifrado)
             print("\n\nTexto decifrado: ",texto_decifrado)

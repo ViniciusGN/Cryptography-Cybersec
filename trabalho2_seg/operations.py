@@ -1,4 +1,4 @@
-#Xor entre 2 valores.
+# Xor between 2 values.
 def xor_hex(byte1, byte2):
     int1 = int(byte1, 16)
     int2 = int(byte2, 16)
@@ -6,7 +6,7 @@ def xor_hex(byte1, byte2):
     result = format(result, '02x')
     return result
 
-#faz um print da lista no formato de uma matrix 4x4. Podendo ser mais de uma matrix
+# Prints the list in the format of a 4x4 matrix. There can be more than one matrix
 def print_list(lista):
     for elements in zip(*lista):
         j=0
@@ -19,9 +19,9 @@ def print_list(lista):
         print()
 
 def esperar_por_enter():
-    input("Pressione Enter para continuar...")
+    input("Press Enter to continue...")
 
-#Converte para hexadecimal
+# Convert to hexadecimal
 def plaintext_tohex(plaint):
     #plaint_hex = ''.join(hex(ord(c))[2:] for c in plaint)
     '''plaint_bytes = plaint.encode('utf-8')
@@ -29,12 +29,12 @@ def plaintext_tohex(plaint):
     plaint = plaint.encode('iso-8859-1').hex()
     return plaint
 
-#Converter hexadecimal para caracter
+# Convert hexadecimal to character
 def plaintext_tocharacter(plaint):
     caracteres = ''.join(chr(int(plaint[i:i+2], 16)) for i in range(0, len(plaint), 2) if plaint[i:i+2] > "0f")
     return caracteres
 
-#Padroniza a string em formato de listas, dentro daa lista há outras listas de tamanho 4
+# Standardizes the string in list format, within the list there are other lists of size 4
 def lists_definition(text):
     text_list = []
     text_matriz = []
@@ -44,7 +44,7 @@ def lists_definition(text):
         text_matriz.append(text_list[i:i+4])
     return text_matriz
 
-#Realiza o padding do plaintext, método utilizado é o PKCS#7
+# Performs the padding of the plaintext, the method used is PKCS#7
 def padding_plaintext(plaint):
     lenght = sum(len(i) for i in plaint)
     byte_padding = hex(16 - (lenght%16)).replace("0x","")

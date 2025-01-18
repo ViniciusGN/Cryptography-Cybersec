@@ -2,7 +2,7 @@ from operations import xor_hex, print_list, esperar_por_enter
 from aes_encrypt import add_roundkey
 from key_generator import generate_roundkey
 from operations import plaintext_tocharacter
-#Função que realiza o embaralhamento de colunas inversa. (MixColumns Inversa)
+# Function that performs reverse column shuffling. (Inverse MixColumns)
 def invMixColumns(texto):
 
     multiplication_by_9 = [
@@ -112,7 +112,7 @@ def invMixColumns(texto):
 
     return new_texto
 
-#Função que realiza a Shift Rows inverso, movendo os bytes para a direita
+# Function that performs the inverse Shift Rows, moving the bytes to the right
 def invShiftRows(text):
     lenght_text = len(text)//4
     i=0 
@@ -141,7 +141,7 @@ def invShiftRows(text):
 
     return text
 
-#Função que realiza a substituição de bytes, neste caso utiliza a S-box inversa
+# Function that performs byte replacement, in this case it uses the inverse S-box
 def invSubBytes(text):
     
     ins_box = [
@@ -175,24 +175,24 @@ def invSubBytes(text):
         i_2+=4
     return text
 
-#Realiza a decifração AES
+# Performs AES decryption
 def aes_decryption(key, text):
     print("\nKey:")
     print_list(key)
-    print("\nTexto a ser decifrado:")
+    print("\nText to be deciphered:")
     print_list(text)
     esperar_por_enter()
     op = 0
 
     while op != '1' and op != '2':
-        print("\n1 - Mostrar resultado direto\n2 - Ver passo a passo")
-        op = input("Selecione a opção: ")
+        print("\n1 - Show direct result\n2 - See step by step")
+        op = input("Select option: ")
 
     roundkey = 10
     expansion_key = []
     expansion_key.append(key)
 
-    for i in range(1,11,1): #Expansion key e atribui a uma lista
+    for i in range(1,11,1): # Expansion key and assign it to a list
         key = (generate_roundkey(key, i))
         expansion_key.append(key)
 
@@ -254,13 +254,13 @@ def aes_decryption(key, text):
         print_list(text)
     
     valores = []
-    print("Texto decifrado:",end=" ")
+    print("Deciphered text:",end=" ")
     for linha in text:
         for valor in linha:
             print(valor, end='')
             valores.append(valor)
     valores_juntos = ''.join(map(str, valores))
     valores_juntos = plaintext_tocharacter(valores_juntos)
-    print(f"\nTexto decifrado convertido: {valores_juntos}")
+    print(f"\nConverted decrypted text: {valores_juntos}")
     esperar_por_enter()
     return 0

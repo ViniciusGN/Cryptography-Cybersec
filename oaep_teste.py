@@ -1,33 +1,33 @@
 def oaep_encode(message, k):
-    # Etapa 1: Preenchimento do rótulo
+    # Step 1: Filling in the label
     label = b''
     message = message.encode("utf-8")
     padded_message = message + (b'\x00' * (k - len(message) - len(label) - 1))
     padded_message += b'\x01' + label
 
-    # Etapa 2: Geração do valor aleatório
+    # Step 2: Generating the random value
     seed = generate_random_seed(32)
     seed_bits = int.from_bytes(seed, 'big')
-    seed = bin(seed_bits)[2:]  # Remover o prefixo '0b'
-    #print("Semente:", type(seed))
+    seed = bin(seed_bits)[2:]  # Remove the '0b' prefix
+    #print("Seed:", type(seed))
 
-    # Etapa 3: MGF (Mask Generation Function)
+    # Step 3: MGF (Mask Generation Function)
     mask = mgf(seed, k - len(seed))
-    #print("Máscara:", mask.hex())
+    #print("Mask:", mask.hex())
 
-    # Etapa 4: XOR com o valor aleatório
+    # Step 4: XOR with the random value
     masked_message = bytes([padded_message[i] ^ mask[i] for i in range(len(mask))])
 
-    # Etapa 5: MGF (Mask Generation Function)
-    masked_message_hex = binascii.hexlify(masked_message).decode('utf-8')  # Converter bytes em hexadecimal
-    masked_message_bin = bin(int(masked_message_hex, 16))[2:]  # Converter hexadecimal em binário
-    masked_message_str = bits_to_string(masked_message_bin)  # Converter binário em string
-    #print("Mensagem mascarada:", masked_message_str)
+    # Step 5: MGF (Mask Generation Function)
+    masked_message_hex = binascii.hexlify(masked_message).decode('utf-8')  # Convert bytes to hexadecimal
+    masked_message_bin = bin(int(masked_message_hex, 16))[2:]  # Convert hexadecimal to binary
+    masked_message_str = bits_to_string(masked_message_bin)  # Convert binary to string
+    #print("Masked message:", masked_message_str)
 
     masked_seed = mgf(masked_message_str, len(seed))
-    #print("Semente mascarada:", masked_seed.hex())
+    #print("Masked seed:", masked_seed.hex())
 
-    # Etapa 6: XOR com a semente original
+    # Step 6: XOR with the original seed
     encoded_message = bytes([masked_message[i] ^ masked_seed[i] for i in range(len(masked_seed))])
 
     return encoded_message
@@ -36,26 +36,26 @@ def oaep_decode(encoded_message, k):
     hlen = len(sha3_256(encoded_message))
     k1 = k - 1 * hlen - 1
 
-    # Etapa 2: Separar as partes do texto codificado (split)
+    # Step 2: Separate the parts of the encoded text (split)
     masked_message, masked_seed = encoded_message[:k1], encoded_message[k1:]
 
-    # Etapa 3: MGF (Mask Generation Function)
+    # Step 3: MGF (Mask Generation Function)
     seed = mgf(masked_message, len(masked_seed))
 
-    # Etapa 4: XOR com a semente original
+    # Step 4: XOR with the original seed
     masked_message = bytes([masked_message[i] ^ seed[i] for i in range(len(seed))])
 
-    # Etapa 5: MGF (Mask Generation Function)
+    # Step 5: MGF (Mask Generation Function)
     masked_message_hex = binascii.hexlify(masked_message).decode('utf-8')
 
-    # Etapa 6: Remover preenchimento
+    # Step 6: Remove Fill
     padded_message = '1' + masked_message_hex
     index = padded_message.find('1', 1)
     if index == -1:
         raise ValueError("Preenchimento inválido")
     padded_message = padded_message[index + 1:]
     
-    # Etapa 7: Obter a mensagem original
+    # Step 7: Get the original message
     original_message = bytes.fromhex(padded_message).decode('utf-8')
 
     return original_message
@@ -159,9 +159,6 @@ def oaep_enteste(M:str, emLen, label= b"") -> bytes:
 
     return EM
 
-
-
-
 class Criptografia(object):
 
     def criptografia(self, m, e, n):
@@ -180,7 +177,6 @@ class Criptografia(object):
         enc = ''.join(chr(self.criptografia(ord(x), e, n)) for x in s)
         print('Texto Cifrado: ', enc, '\n')
         return enc
-        
         
     def decripta_mensagem(self, s):
         self.s = s

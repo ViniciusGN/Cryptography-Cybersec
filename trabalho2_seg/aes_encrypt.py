@@ -11,9 +11,9 @@ def add_roundkey(plaint, k):
         i_2+=4
     return plaint
 
-#Função que realiza a substituição de bytes
+# Function that performs byte replacement
 def subBytes(plaintext):
-    #Recebe a S-box
+    # Receive the S-box
     s_box = aes_sbox()
 
     lenght_plaint = len(plaintext)//4
@@ -28,7 +28,7 @@ def subBytes(plaintext):
         i_2+=4
     return plaintext
 
-#Função que realiza a Shift Rows, movendo os bytes para a esquerda
+# Function that performs Shift Rows, moving the bytes to the left
 def shiftRows(plaintext):
     lenght_plaint = len(plaintext)//4
     i=0
@@ -57,7 +57,7 @@ def shiftRows(plaintext):
 
     return plaintext
 
-#Função que realiza o embaralhamento de colunas. (MixColumns)
+# Function that shuffles columns. (MixColumns)
 def mixColumns(plaintext):
 
     multiplication_by_2 = [
@@ -132,7 +132,7 @@ def mixColumns(plaintext):
     return new_plaintext
 
 
-#Função que realiza a cifração aes
+# Function that performs aes encryption
 def aes_encryption(k, plaint):
     print("\nKey:")
     print_list(k)
@@ -141,8 +141,8 @@ def aes_encryption(k, plaint):
     esperar_por_enter()
     op = 0
     while op != '1' and op != '2':
-        print("\n1 - Mostrar resultado direto\n2 - Ver passo a passo")
-        op = input("Selecione a opção: ")
+        print("\n1 - Show direct result\n2 - See step by step")
+        op = input("Select option: ")
     
     if op == '2':
         print('\nAdd Round Key, Round 0')
@@ -162,7 +162,7 @@ def aes_encryption(k, plaint):
             print_list(plaint)
             esperar_por_enter()
 
-            #Função mixColumns() não deve ser executada na rodada 10
+            # mixColumns() function should not be executed in round 10
             if i != 10:
                 print(f"\nMix Column, Round {i}")
                 plaint = mixColumns(plaint)
@@ -197,7 +197,7 @@ def aes_encryption(k, plaint):
         print("\nState Matrix:")
         print_list(plaint)
 
-    print("Texto cifrado:",end=" ")
+    print("Ciphertext:",end=" ")
     for linha in plaint:
         for valor in linha:
             print(valor, end='')

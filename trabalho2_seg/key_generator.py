@@ -1,9 +1,9 @@
 import random
-#from aes_encrypt import aes_sbox
+# from aes_encrypt import aes_sbox
 from operations import xor_hex
 
 
-#Função que retorna a S-box para a função subBytes() e generate_roundkey()
+# Function that returns the S-box for the subBytes() and generate_roundkey() functions
 def aes_sbox():
     s_box = [
             ['63', '7c', '77', '7b', 'f2', '6b', '6f', 'c5', '30', '01', '67', '2b', 'fe', 'd7', 'ab', '76'],
@@ -26,48 +26,48 @@ def aes_sbox():
     
     return s_box
 
-#Gerar uma chave de 128 bits aleatória
+# Generate a random 128-bit key
 def generate_random_key(length):
-    #Gera um número inteiro aleatório com base na quantidade de bits
+    # Generates a random integer based on the number of bits
     key_int = random.getrandbits(length * 8)
-    #Converte o número inteiro em bytes e retorna a chave em formato hexadecimal
+    # Converts the integer to bytes and returns the key in hexadecimal format
     key_bytes = key_int.to_bytes(length, byteorder='big')
     return key_bytes.hex()
 
 
-#Função para gerar a chave da rodada i. (Expansion Key)
+# Function to generate the key for round i. (Expansion Key)
 def generate_roundkey(k, r):
     
-    #Recebe a S-box
+    # Receive the S-box
     s_box = aes_sbox()
 
-    #Round constant 128 bits
+    # Round constant 128 bits
     rcon = ['8d', '01', '02', '04', '08', '10', '20', '40', '80', '1b', '36']
     
     w = []
     for i in range(len(k[3])):
         w.append(k[3][i])
     
-    #ROT_WORD
+    # ROT_WORD
     first_element = k[3][0]
     for i in range(1,len(k[3]),1):
         w[i-1] = k[3][i]
     w[3] = first_element
     
-    #SUB_WORD
+    # SUB_WORD
     for x in range(len(k[3])):
         byte = w[x]
         i = int(byte[0],16)
         j = int(byte[1],16)
         w[x] = s_box[i][j]
     
-    #Round constant
+    # Round constant
     round_const = [rcon[r],'00','00','00']
     for i in range(len(k[3])):
         w[i] = xor_hex(w[i], round_const[i])
     #print(w)
     
-    #Expansion key: Primeiro faz o xor entre w e k[0] 
+    #Expansion key: First xor w and k[0]
     round_key = []
     lista = []
     for i in range(len(w)):
@@ -77,7 +77,7 @@ def generate_roundkey(k, r):
     
     #print(round_key)
     
-    #Expansio key, continua na expansion key, fazendo os xor restantes.
+    # Expansion key, continues on the expansion key, doing the remaining xor.
     for i in range(1,len(k),1):
         lista = []
         for j in range(len(k[i])):
